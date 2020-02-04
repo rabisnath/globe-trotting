@@ -22,6 +22,6 @@ This script has a positional argument, `target`, which takes a .csv. The script 
 
 ### pointTotals.py
 
-Trains a regression model to predict the total points score in a given game. Takes a positional argument `target` which should be a .csv containing the training data.
+Trains a regression model to predict the total points scored in a given game. Takes a positional argument `target` which should be a .csv containing the training data.
 
 This is currently incomplete. Right now, it trains on an arbitrary set of features that don't reflect real world conditions, and no thought has been put into various ways to reshape the data before training.
