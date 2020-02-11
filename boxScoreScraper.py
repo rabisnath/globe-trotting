@@ -4,8 +4,8 @@ import datetime
 import pandas as pd
 
 base_url = "https://basketball.realgm.com/international/scores/"
-start_date = datetime.date(2019, 1, 1)
-end_date = datetime.date(2019, 1, 8)
+start_date = datetime.date(2020, 1, 1)
+end_date = datetime.date(2020, 2, 1)
 anchor_date = datetime.date(2100, 1, 1) # used in creating recency metric
 
 def make_url(base_url, date):
@@ -95,6 +95,43 @@ def game_data_from_urls(urls):
         data['home_ORper'] = home_row_unpacked[3]
         data['home_FTR'] = home_row_unpacked[4]
 
+        # reading the two detailed tables
+        stat_tables = soup.findAll("table", class_="tablesaw compact")
+        # away team
+        away_team_table = stat_tables[0]
+        away_team_stats = away_team_table.findAll("tr", class_="stattotals")
+        row1 = [d.text for d in away_team_stats[1].findAll("td")]
+        row2 = [d.text for d in away_team_stats[2].findAll("td")]
+        data['away_FIC'] = row1[8]
+        data['away_Off'] = row1[9]
+        data['away_Def'] = row1[10]
+        data['away_Reb'] = row1[11]
+        data['away_Ast'] = row1[12]
+        data['away_PF'] = row1[13]
+        data['away_STL'] = row1[14]
+        data['away_TO'] = row1[15]
+        data['away_BLK'] = row1[16]
+        data['away_FGM-A'] = float(row2[5][:-1])
+        data['away_3PM-A'] = float(row2[6][:-1])
+        data['away_FTM-A'] = float(row2[7][:-1])
+        # home team
+        home_team_table = stat_tables[1]
+        home_team_stats = home_team_table.findAll("tr", class_="stattotals")
+        row1 = [d.text for d in home_team_stats[1].findAll("td")]
+        row2 = [d.text for d in home_team_stats[2].findAll("td")]
+        data['home_FIC'] = row1[8]
+        data['home_Off'] = row1[9]
+        data['home_Def'] = row1[10]
+        data['home_Reb'] = row1[11]
+        data['home_Ast'] = row1[12]
+        data['home_PF'] = row1[13]
+        data['home_STL'] = row1[14]
+        data['home_TO'] = row1[15]
+        data['home_BLK'] = row1[16]
+        data['home_FGM-A'] = float(row2[5][:-1])
+        data['home_3PM-A'] = float(row2[6][:-1])
+        data['home_FTM-A'] = float(row2[7][:-1])
+
         df_rows.append(data)
 
     df = pd.DataFrame.from_dict(df_rows)
@@ -124,6 +161,7 @@ def df_from_date(base_url, date):
     df = game_data_from_urls(urls)
 
     df['date_played'] = date_str(date, "/")
+    df['season'] = date.year
 
     delta = anchor_date - date
     df['staleness'] = delta.days
