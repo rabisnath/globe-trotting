@@ -71,6 +71,13 @@ class Estimator(object):
             callbacks=[ModelCheckpoint(path+name+'_'+self.name+'.h5', monitor='val_loss', save_best_only=True),
                 EarlyStopping(monitor='val_loss', min_delta=0, patience=15, mode='auto')])
 
+        # with open(self.name+'_history.log','w+') as f:
+        #     history = history.history
+        #     f.write(','.join(history.keys())+'\n')
+        #     for l in zip(*history.values()):
+        #         f.write(','.join([str(x) for x in l])+'\n')
+        #     f.close
+
         #self.model.save(path+name+'_from_Method_'+self.name+'.h5')
 
         # verifying that we get the same predictions here as we do in infer.py

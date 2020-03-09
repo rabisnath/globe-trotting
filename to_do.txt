@@ -1,0 +1,19 @@
+== TO DO ==
+
+update trainingFeatures.py / make a new script to take box scores for say, the past week, and update 
+the training dataset
+
+update the readme
+
+sit down and try to come up with a better idea of
+    - which stats from the box scores to include
+    - which metrics to calculate (while we're still doing that manually, that is)
+
+write some code to generate a report / summary of the model's performance
+
+start planning the big refactor
+    - will enable us to use ML to make the metrics
+    - will make it easier to explore different kinds of networks
+
+eventually make a single, user-friendly tool for the guys to actually use
+^this is far off since there's a lot that can be done to improve the model performance right now

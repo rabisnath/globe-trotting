@@ -7,7 +7,8 @@ modeling/
 .DS_Store
 
 thinking.txt
-to_do.txt
+hours.txt
+long.txt
 
 *.ipynb
 .ipynb*
