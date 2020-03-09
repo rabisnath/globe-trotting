@@ -35,7 +35,7 @@ Each row has:
         for row i, away_team_def_30game = team_stats_df[$away_team_name_def_30game]
 """
 
-to_keep = ['staleness', 'home_minus_away', 'total', 'away_team', 'home_team', 'date_played', 'index'] # non-stat features to keep
+to_keep = ['staleness', 'away_team', 'home_team', 'index', 'total']#'home_minus_away'] # non-stat features to keep
 stat_suffixes = ['Off', 'Def', 'FGM-A', '3PM-A'] # want to grab features like "home_Off" and "away_Off" by suffix
 
 def get_full_feature_list(base, stat_suffixes):
@@ -135,23 +135,61 @@ def import_team_data(path):
     for f in csvs:
         team_dfs[f[:-9]] = pd.read_csv(path+f)
     return team_dfs
-    
 
-def make_training_dataset(box_scores, base, stat_suffixes, team_data):
+def append_suffixes(stat_suffixes, endings):
+    # takes [Def, Off], [10game_avg, 50game_avg] to
+    # [Def_10game_avg, Def_50game_avg, Off_10game_avg, Off_50game_avg]
+    return [s+'_'+e for s in stat_suffixes for e in endings]
+
+endings = ['2game_avg', '5game_avg', '10game_avg', '50game_avg']
+
+def pull_stat(stat_suffix, team_data, team, index):
+    # helper for make_training_dataset, gets team_data for given stat,
+    # for the specified team + index, returns values as a list
+    data = team_data[team]
+    out = data.loc[data['index']==index, team+'_'+stat_suffix].iloc[0]
+    return out
+
+def make_training_dataset(box_scores, base, stat_suffixes, team_data, endings=endings):
     # takes box score dataset, returns new dataset with
     # cols in base copied over
     # data from team_data for each stat represented in stat_suffixes
     training_data = box_scores[base]
     #print(training_data.head())
-    # sort df by home team, fill in home stat columns, do same for away ###
-    training_data = training_data.sort_values('home_team')
-    #print(training_data.head())
     #print(team_data['2B_Control_Trapani'].head())
+    #n = len(training_data)
+    #print(n)
+    #print(team_data.keys())
+    #print("Len team_data.keys: ", len(team_data.keys()))
+    #print("Len training_data: ", len(training_data['home_team'].unique()))
+    n_cols = len(training_data.keys())
+    updated_suffixes = append_suffixes(stat_suffixes, endings)
+    for s in updated_suffixes:
+        home_col_name = 'home_' + s
+        away_col_name = 'away_' + s
+        home_values = []
+        away_values = []
+        for i, r in training_data.iterrows():
+            index = r['index']
+            home_team = r['home_team']
+            away_team = r['away_team']
+            try:
+                home_val = pull_stat(s, team_data, home_team, index)
+                away_val = pull_stat(s, team_data, away_team, index)
+            except Exception as e:
+                #print("Exception: "+str(e))
+                home_val = -1
+                away_val = -1
+            home_values.append(home_val)
+            away_values.append(away_val)
+        #training_data[home_col_name] = home_values
+        #training_data[away_col_name] = away_values
+        training_data.insert(n_cols-1, home_col_name, home_values)
+        training_data.insert(n_cols-1, away_col_name, away_values)
     
-
-
+    #print(training_data.head())
     return training_data
-
+ 
 def tests():
     #print(get_full_feature_list(to_keep, stat_suffixes))
     #l = np.arange(10)
@@ -160,10 +198,10 @@ def tests():
     #print(team_df.head())
     #print(get_unique_teams(df))
 
-    team_data = get_all_team_dfs(df, stat_suffixes)
+    #team_data = get_all_team_dfs(df, stat_suffixes)
     #print(team_data["Perth"].head()) 
-    export_team_data('team_data/', team_data)
-    #team_data = import_team_data('team_data/')
+    #export_team_data('team_data/', team_data)
+    team_data = import_team_data('team_data/')
     #print(team_data['Perth'].head())
     training_data = make_training_dataset(df, to_keep, stat_suffixes, team_data)
     
@@ -175,6 +213,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('target', type=str, help='.csv file to process')
     parser.add_argument('out', type=str, help='output file name, if none provided, overwrites target')
+    parser.add_argument('--imp', action='store_true', help='if omitted, calculates and exports team data, if included, uses data from /team_data')
 
     args = parser.parse_args()
     target = args.target
@@ -186,9 +225,18 @@ if __name__ == "__main__":
     #df = df.reset_index(drop=True)
     df = df.reset_index()
     df = fix_names(df)
-    print(df.head())
-    tests()
+    #print(df.head())
+    #tests()
 
-    # editing df
-    # fn calls go here
+    if args.imp:
+        #print("IMPORT")
+        team_data = import_team_data('team_data/')
+    else:
+        #print("EXPORT")
+        team_data = get_all_team_dfs(df, stat_suffixes)
+        export_team_data('team_data/', team_data)
+        team_data = import_team_data('team_data/')
+
+    df = make_training_dataset(df, to_keep, stat_suffixes, team_data)        
+    #df.drop('index')
     df.to_csv(out)

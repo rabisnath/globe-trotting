@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     target = args.target
-    out = target if not args.out else args.output
+    out = target if not args.out else args.out
 
     # importing data
     df = pd.read_csv(target, index_col=0)

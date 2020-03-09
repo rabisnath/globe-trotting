@@ -2,6 +2,7 @@ import requests as r
 import bs4
 import datetime
 import pandas as pd
+import os
 
 base_url = "https://basketball.realgm.com/international/scores/"
 start_date = datetime.date(2020, 1, 1)
@@ -185,5 +186,18 @@ def to_csv(base_url, start_date, end_date, path=""):
     df = df_from_range(base_url, start_date, end_date)
     df.to_csv(path+filename)
 
+def decade(startyr, endyr):
+    for i in range(endyr - startyr):
+        print("Year {} of {}".format(i, endyr-startyr))
+        start_date = datetime.date(startyr+i, 1, 1)
+        end_date = datetime.date(startyr+i+1, 1, 1)
+        try:
+            os.mkdir('decade/')
+        except Exception as e:
+            pass
+        to_csv(base_url, start_date, end_date, path="decade/")
+    return
+
 if __name__ == "__main__":
-    to_csv(base_url, start_date, end_date)
+    #to_csv(base_url, start_date, end_date)
+    decade(2010, 2020)
